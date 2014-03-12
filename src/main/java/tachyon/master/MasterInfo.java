@@ -485,7 +485,22 @@ public class MasterInfo {
     mJournal.getEditLog().createRawTable(inodeId, columns, metadata);
   }
 
-  private boolean _delete(int fileId, boolean recursive) throws TachyonException {
+  boolean _delete(String path, boolean recursive) throws TachyonException {
+    synchronized (mRoot) {
+      Inode inode = null;
+      try {
+        inode = getInode(path);
+      } catch (InvalidPathException e) {
+        return false;
+      }
+      if (inode == null) {
+        return true;
+      }
+      return _delete(inode.getId(), recursive);
+    }
+  }
+  
+  boolean _delete(int fileId, boolean recursive) throws TachyonException {
     LOG.info("delete(" + fileId + ")");
     boolean succeed = true;
     synchronized (mRoot) {
@@ -972,7 +987,7 @@ public class MasterInfo {
    * @return succeed or not
    * @throws TachyonException
    */
-  public boolean delete(String path, boolean recursive) throws TachyonException {
+   public boolean delete(String path, boolean recursive) throws TachyonException {
     LOG.info("delete(" + path + ")");
     synchronized (mRoot) {
       Inode inode = null;
